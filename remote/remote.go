@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/spf13/viper"
 	crypt "github.com/xordataexchange/crypt/config"
@@ -76,6 +77,8 @@ func getConfigManager(rp viper.RemoteProvider) (crypt.ConfigManager, error) {
 	var cm crypt.ConfigManager
 	var err error
 
+	endpoints := strings.Split(rp.Endpoint(), ",")
+
 	if rp.SecretKeyring() != "" {
 		kr, err := os.Open(rp.SecretKeyring())
 		defer kr.Close()
@@ -83,15 +86,15 @@ func getConfigManager(rp viper.RemoteProvider) (crypt.ConfigManager, error) {
 			return nil, err
 		}
 		if rp.Provider() == "etcd" {
-			cm, err = crypt.NewEtcdConfigManager([]string{rp.Endpoint()}, kr)
+			cm, err = crypt.NewEtcdConfigManager(endpoints, kr)
 		} else {
-			cm, err = crypt.NewConsulConfigManager([]string{rp.Endpoint()}, kr)
+			cm, err = crypt.NewConsulConfigManager(endpoints, kr)
 		}
 	} else {
 		if rp.Provider() == "etcd" {
-			cm, err = crypt.NewStandardEtcdConfigManager([]string{rp.Endpoint()})
+			cm, err = crypt.NewStandardEtcdConfigManager(endpoints)
 		} else {
-			cm, err = crypt.NewStandardConsulConfigManager([]string{rp.Endpoint()})
+			cm, err = crypt.NewStandardConsulConfigManager(endpoints)
 		}
 	}
 	if err != nil {
